@@ -1,11 +1,11 @@
 package bot.inker.bc.razor.i18n
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import bot.inker.bc.razor.protocol.chat.ChatMessageType
 import bot.inker.bc.razor.protocol.chat.ReceivedChatMessage
 import bot.inker.bc.razor.state.CharacterInfo
 import bot.inker.bc.razor.state.CharacterState
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -19,7 +19,11 @@ class ChatMessageResolverTest {
         return { memberNumber -> map[memberNumber] }
     }
 
-    private fun makeCharacter(memberNumber: Int, name: String, rawData: com.google.gson.JsonElement? = null): CharacterState {
+    private fun makeCharacter(
+        memberNumber: Int,
+        name: String,
+        rawData: com.google.gson.JsonElement? = null
+    ): CharacterState {
         return CharacterState(
             id = memberNumber.toString(),
             memberNumber = memberNumber,

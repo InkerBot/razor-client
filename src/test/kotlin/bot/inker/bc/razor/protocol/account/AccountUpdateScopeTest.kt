@@ -168,6 +168,9 @@ class AccountUpdateScopeTest {
         scope.description = "d"
         scope.allowedInteractions = 1
 
-        assertEquals(setOf("Money", "Owner", "Title", "LabelColor", "Description", "AllowedInteractions"), scope.fields.keys)
+        assertEquals(
+            setOf("Money", "Owner", "Title", "LabelColor", "Description", "AllowedInteractions"),
+            scope.fields.keys
+        )
     }
 }

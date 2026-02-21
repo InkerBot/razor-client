@@ -29,6 +29,7 @@ class CommandExecutor(
             is Command.Chat -> {
                 client.chat.send(command.message)
             }
+
             is Command.Whisper -> {
                 val target = resolveTarget(command.target, client)
                 if (target == null) {
@@ -38,15 +39,19 @@ class CommandExecutor(
                 client.chat.whisper(target.memberNumber, command.message)
                 addMessage(ChatFormatter.helpMessage("[You -> ${target.displayName}] ${command.message}"))
             }
+
             is Command.Emote -> {
                 client.chat.emote(command.text)
             }
+
             is Command.Leave -> {
                 client.room.leave()
             }
+
             is Command.Rooms -> {
                 client.room.leave()
             }
+
             is Command.Kick -> {
                 val target = resolveTarget(command.target, client)
                 if (target == null) {
@@ -56,6 +61,7 @@ class CommandExecutor(
                 client.room.kick(target.memberNumber)
                 addMessage(ChatFormatter.systemMessage("Kicked ${target.displayName}"))
             }
+
             is Command.Ban -> {
                 val target = resolveTarget(command.target, client)
                 if (target == null) {
@@ -65,6 +71,7 @@ class CommandExecutor(
                 client.room.ban(target.memberNumber)
                 addMessage(ChatFormatter.systemMessage("Banned ${target.displayName}"))
             }
+
             is Command.Help -> {
                 addMessage(ChatFormatter.helpMessage("=== Commands ==="))
                 addMessage(ChatFormatter.helpMessage("/w <target> <msg> - Whisper to player"))
@@ -76,6 +83,7 @@ class CommandExecutor(
                 addMessage(ChatFormatter.helpMessage("/quit - Exit program"))
                 addMessage(ChatFormatter.helpMessage("Target: name or #12345"))
             }
+
             is Command.Quit -> {
                 app.quit()
             }

@@ -1,12 +1,7 @@
 package bot.inker.bc.razor.tui.widget
 
 import com.googlecode.lanterna.TerminalSize
-import com.googlecode.lanterna.gui2.Interactable
-import com.googlecode.lanterna.gui2.LinearLayout
-import com.googlecode.lanterna.gui2.Panel
-import com.googlecode.lanterna.gui2.Direction
-import com.googlecode.lanterna.gui2.Label
-import com.googlecode.lanterna.gui2.TextBox
+import com.googlecode.lanterna.gui2.*
 import com.googlecode.lanterna.input.KeyStroke
 import com.googlecode.lanterna.input.KeyType
 

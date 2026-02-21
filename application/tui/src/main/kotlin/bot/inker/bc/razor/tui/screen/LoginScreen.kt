@@ -99,6 +99,7 @@ class LoginScreen(
                     is LoginResult.Success -> {
                         app.navigateToLobby()
                     }
+
                     is LoginResult.Error -> {
                         loginButton.isEnabled = true
                         statusLabel.text = ""
@@ -128,26 +129,31 @@ class LoginScreen(
                 connectionStatusLabel.text = "Connected"
                 loginButton.isEnabled = true
             }
+
             is RazorEvent.LoginQueue -> {
                 statusLabel.text = "Queue position: ${event.position}"
             }
+
             is RazorEvent.Disconnected -> {
                 connected = false
                 connectionStatusLabel.text = "Disconnected"
                 loginButton.isEnabled = false
                 statusLabel.text = event.reason ?: "Connection lost"
             }
+
             is RazorEvent.ForceDisconnect -> {
                 connected = false
                 connectionStatusLabel.text = "Disconnected"
                 loginButton.isEnabled = false
                 statusLabel.text = event.reason.toString()
             }
+
             is RazorEvent.Reconnecting -> {
                 connected = false
                 connectionStatusLabel.text = "Reconnecting..."
                 loginButton.isEnabled = false
             }
+
             else -> {}
         }
     }

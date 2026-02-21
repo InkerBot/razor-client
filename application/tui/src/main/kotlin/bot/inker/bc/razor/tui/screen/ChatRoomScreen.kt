@@ -107,9 +107,11 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
                 val formatted = ChatFormatter.format(msg, senderName, targetName, resolvedContent)
                 chatLog.addMessage(formatted)
             }
+
             is RazorEvent.MemberJoined -> {
                 refreshState()
             }
+
             is RazorEvent.MemberLeft -> {
                 val client = app.client
                 val name = client?.room?.characters
@@ -119,30 +121,39 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
                 // State already updated by razor-client before event dispatch
                 refreshState()
             }
+
             is RazorEvent.RoomUpdated -> {
                 refreshState()
             }
+
             is RazorEvent.RoomLeft -> {
                 app.navigateToLobby()
             }
+
             is RazorEvent.CharacterUpdated -> {
                 refreshState()
             }
+
             is RazorEvent.PlayersReordered -> {
                 refreshState()
             }
+
             is RazorEvent.Reconnecting -> {
                 statusBar.connectionStatus = "Reconnecting (#${event.attemptNumber})..."
             }
+
             is RazorEvent.Connected -> {
                 statusBar.connectionStatus = "Connected"
             }
+
             is RazorEvent.Disconnected -> {
                 app.navigateToLogin("Disconnected: ${event.reason ?: "Unknown"}")
             }
+
             is RazorEvent.ForceDisconnect -> {
                 app.navigateToLogin("Disconnected: ${event.reason}")
             }
+
             is RazorEvent.BeepReceived -> {
                 val beep = event.beep
                 val fromName = beep.memberName ?: "#${beep.memberNumber}"
@@ -153,9 +164,11 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
                 }
                 chatLog.addMessage(ChatFormatter.systemMessage(msg))
             }
+
             is RazorEvent.ServerInfo -> {
                 // optionally update online count somewhere
             }
+
             else -> {}
         }
     }

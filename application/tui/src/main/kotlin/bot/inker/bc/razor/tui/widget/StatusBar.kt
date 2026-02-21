@@ -8,11 +8,17 @@ import com.googlecode.lanterna.gui2.TextGUIGraphics
 
 class StatusBar : AbstractComponent<StatusBar>() {
     var connectionStatus: String = "Connected"
-        set(value) { field = value; invalidate() }
+        set(value) {
+            field = value; invalidate()
+        }
     var playerInfo: String = ""
-        set(value) { field = value; invalidate() }
+        set(value) {
+            field = value; invalidate()
+        }
     var roomInfo: String = ""
-        set(value) { field = value; invalidate() }
+        set(value) {
+            field = value; invalidate()
+        }
 
     override fun createDefaultRenderer(): ComponentRenderer<StatusBar> {
         return object : ComponentRenderer<StatusBar> {

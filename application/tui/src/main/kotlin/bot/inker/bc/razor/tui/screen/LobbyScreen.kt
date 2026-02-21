@@ -132,6 +132,7 @@ class LobbyScreen(private val app: TuiApplication) : Screen {
                     is RoomJoinResult.Success -> {
                         // Navigation happens via RoomJoined event
                     }
+
                     is RoomJoinResult.Error -> {
                         statusLabel.text = ""
                         MessageDialogBuilder()
@@ -157,17 +158,21 @@ class LobbyScreen(private val app: TuiApplication) : Screen {
             is RazorEvent.RoomJoined -> {
                 app.navigateToChatRoom()
             }
+
             is RazorEvent.ServerInfo -> {
                 if (!searching) {
                     statusLabel.text = "Online: ${event.onlinePlayers} players"
                 }
             }
+
             is RazorEvent.Disconnected -> {
                 app.navigateToLogin("Disconnected: ${event.reason ?: "Unknown"}")
             }
+
             is RazorEvent.ForceDisconnect -> {
                 app.navigateToLogin("Disconnected: ${event.reason}")
             }
+
             else -> {}
         }
     }

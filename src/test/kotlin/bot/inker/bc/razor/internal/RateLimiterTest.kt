@@ -1,7 +1,7 @@
 package bot.inker.bc.razor.internal
 
 import bot.inker.bc.razor.RazorClientConfig
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 

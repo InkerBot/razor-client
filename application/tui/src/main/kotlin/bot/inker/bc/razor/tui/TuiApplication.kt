@@ -154,7 +154,7 @@ class TuiApplication(
 
         throw IllegalStateException(
             "Cannot create terminal. Please run from an interactive terminal (with /dev/tty) " +
-                "or a graphical environment (with a working DISPLAY)."
+                    "or a graphical environment (with a working DISPLAY)."
         )
     }
 

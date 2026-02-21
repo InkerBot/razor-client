@@ -20,17 +20,21 @@ object CommandParser {
                     Command.Whisper(whisperParts[0], whisperParts[1])
                 }
             }
+
             "me", "emote" -> {
                 if (args.isBlank()) Command.Chat(input) else Command.Emote(args)
             }
+
             "leave" -> Command.Leave
             "rooms" -> Command.Rooms
             "kick" -> {
                 if (args.isBlank()) Command.Chat(input) else Command.Kick(args.trim())
             }
+
             "ban" -> {
                 if (args.isBlank()) Command.Chat(input) else Command.Ban(args.trim())
             }
+
             "help" -> Command.Help
             "quit", "exit" -> Command.Quit
             else -> Command.Chat(input) // unknown command, treat as chat

@@ -10,83 +10,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import java.net.Authenticator;
-import java.net.InetSocketAddress;
-import java.net.PasswordAuthentication;
-import java.net.Proxy;
-import java.net.URI;
+import java.net.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SocketIOTransport implements SocketTransport {
     private volatile Socket socket;
-
-    @Override
-    public void connect(String url, Map<String, String> properties, SocketTransportListener listener) {
-        disconnect();
-
-        try {
-            IO.Options options = applyProperties(new IO.Options(), properties);
-
-            Socket socket = IO.socket(URI.create(url), options);
-
-            socket.on(Socket.EVENT_CONNECT, args -> listener.onConnect());
-
-            socket.on(Socket.EVENT_DISCONNECT, args -> {
-                String reason = args.length > 0 && args[0] != null ? args[0].toString() : null;
-                listener.onDisconnect(reason);
-            });
-
-            socket.io().on(Manager.EVENT_RECONNECT_ATTEMPT, args -> {
-                int attempt = args.length > 0 ? ((Number) args[0]).intValue() : 0;
-                listener.onReconnecting(attempt);
-            });
-
-            socket.onAnyIncoming(args -> {
-                if (args.length < 1) return;
-                String event = args[0].toString();
-                String payload = args.length > 1 ? serializePayload(args[1]) : "null";
-                listener.onEvent(event, payload);
-            });
-
-            this.socket = socket;
-            socket.connect();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to connect to " + url, e);
-        }
-    }
-
-    @Override
-    public void disconnect() {
-        Socket socket = this.socket;
-        if (socket != null) {
-            socket.off();
-            socket.disconnect();
-            this.socket = null;
-        }
-    }
-
-    @Override
-    public void emit(String event, String payload) {
-        Socket socket = this.socket;
-        if (socket == null) return;
-
-        try {
-            Object data = new JSONTokener(payload).nextValue();
-            socket.emit(event, data);
-        } catch (Exception e) {
-            socket.emit(event, payload);
-        }
-    }
-
-    @Override
-    public boolean isConnected() {
-        Socket socket = this.socket;
-        return socket != null && socket.connected();
-    }
 
     private static String serializePayload(Object data) {
         if (data instanceof JSONObject || data instanceof JSONArray) {
@@ -181,5 +112,69 @@ public class SocketIOTransport implements SocketTransport {
     private static boolean getBool(Map<String, String> properties, String key, boolean defaultValue) {
         String value = properties.get(key);
         return value != null ? Boolean.parseBoolean(value) : defaultValue;
+    }
+
+    @Override
+    public void connect(String url, Map<String, String> properties, SocketTransportListener listener) {
+        disconnect();
+
+        try {
+            IO.Options options = applyProperties(new IO.Options(), properties);
+
+            Socket socket = IO.socket(URI.create(url), options);
+
+            socket.on(Socket.EVENT_CONNECT, args -> listener.onConnect());
+
+            socket.on(Socket.EVENT_DISCONNECT, args -> {
+                String reason = args.length > 0 && args[0] != null ? args[0].toString() : null;
+                listener.onDisconnect(reason);
+            });
+
+            socket.io().on(Manager.EVENT_RECONNECT_ATTEMPT, args -> {
+                int attempt = args.length > 0 ? ((Number) args[0]).intValue() : 0;
+                listener.onReconnecting(attempt);
+            });
+
+            socket.onAnyIncoming(args -> {
+                if (args.length < 1) return;
+                String event = args[0].toString();
+                String payload = args.length > 1 ? serializePayload(args[1]) : "null";
+                listener.onEvent(event, payload);
+            });
+
+            this.socket = socket;
+            socket.connect();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to connect to " + url, e);
+        }
+    }
+
+    @Override
+    public void disconnect() {
+        Socket socket = this.socket;
+        if (socket != null) {
+            socket.off();
+            socket.disconnect();
+            this.socket = null;
+        }
+    }
+
+    @Override
+    public void emit(String event, String payload) {
+        Socket socket = this.socket;
+        if (socket == null) return;
+
+        try {
+            Object data = new JSONTokener(payload).nextValue();
+            socket.emit(event, data);
+        } catch (Exception e) {
+            socket.emit(event, payload);
+        }
+    }
+
+    @Override
+    public boolean isConnected() {
+        Socket socket = this.socket;
+        return socket != null && socket.connected();
     }
 }

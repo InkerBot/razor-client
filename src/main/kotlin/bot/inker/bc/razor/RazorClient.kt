@@ -38,6 +38,7 @@ class RazorClient(
     private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "razor-client").apply { isDaemon = true }
     }
+
     @PublishedApi
     internal val eventBus = EventBus()
     private val pendingRequests = PendingRequests(config.requestTimeoutMs, executor)
@@ -486,6 +487,7 @@ class RazorClient(
         private var accountSyncDebounceMs: Long = 2000L
         private var accountSyncMaxWaitMs: Long = 8000L
         private var requestTimeoutMs: Long = 30000L
+
         @PublishedApi
         internal val deferredSubscriptions: MutableList<(RazorClient) -> Subscription> = mutableListOf()
 
