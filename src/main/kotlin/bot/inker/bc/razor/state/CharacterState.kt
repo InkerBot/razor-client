@@ -32,7 +32,7 @@ data class CharacterState(
     data class ArousalState(
         val orgasmTimer: Long? = null,
         val orgasmCount: Int? = null,
-        val progress: Int? = null,
+        val progress: Double? = null,
         val progressTimer: Long? = null,
     )
 }

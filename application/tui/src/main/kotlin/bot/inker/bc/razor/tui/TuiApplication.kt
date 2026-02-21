@@ -16,6 +16,7 @@ import com.googlecode.lanterna.terminal.Terminal
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.charset.Charset
 
 class TuiApplication(
     private val terminalOutput: OutputStream,
@@ -155,7 +156,7 @@ class TuiApplication(
     private fun createTerminal(): Terminal {
         // Try text terminal first (real terminal / SSH session)
         try {
-            return DefaultTerminalFactory(terminalOutput, terminalInput, Charsets.UTF_8)
+            return DefaultTerminalFactory(terminalOutput, terminalInput, Charset.defaultCharset())
                 .setForceTextTerminal(true)
                 .createTerminal()
         } catch (_: Exception) {
@@ -164,7 +165,7 @@ class TuiApplication(
 
         // Try Swing terminal (GUI environment)
         try {
-            return DefaultTerminalFactory(terminalOutput, terminalInput, Charsets.UTF_8)
+            return DefaultTerminalFactory(terminalOutput, terminalInput, Charset.defaultCharset())
                 .createTerminalEmulator()
         } catch (_: Exception) {
             // No display available
