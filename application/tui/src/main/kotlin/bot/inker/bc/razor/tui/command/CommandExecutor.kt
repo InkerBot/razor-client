@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 
 class CommandExecutor(
     private val app: TuiApplication,
+    private val chatFormatter: ChatFormatter,
     private val addMessage: (FormattedMessage) -> Unit,
 ) {
     private val logger = LoggerFactory.getLogger(CommandExecutor::class.java)
@@ -18,7 +19,7 @@ class CommandExecutor(
             executeCommand(command)
         } catch (e: Exception) {
             logger.error("Error executing command: {}", command, e)
-            addMessage(ChatFormatter.errorMessage("Command failed: ${e.message}"))
+            addMessage(chatFormatter.errorMessage("Command failed: ${e.message}"))
         }
     }
 
@@ -33,11 +34,11 @@ class CommandExecutor(
             is Command.Whisper -> {
                 val target = resolveTarget(command.target, client)
                 if (target == null) {
-                    addMessage(ChatFormatter.errorMessage("Player not found: ${command.target}"))
+                    addMessage(chatFormatter.errorMessage("Player not found: ${command.target}"))
                     return
                 }
                 client.chat.whisper(target.memberNumber, command.message)
-                addMessage(ChatFormatter.helpMessage("[You -> ${target.displayName}] ${command.message}"))
+                addMessage(chatFormatter.helpMessage("[You -> ${target.displayName}] ${command.message}"))
             }
 
             is Command.Emote -> {
@@ -55,33 +56,33 @@ class CommandExecutor(
             is Command.Kick -> {
                 val target = resolveTarget(command.target, client)
                 if (target == null) {
-                    addMessage(ChatFormatter.errorMessage("Player not found: ${command.target}"))
+                    addMessage(chatFormatter.errorMessage("Player not found: ${command.target}"))
                     return
                 }
                 client.room.kick(target.memberNumber)
-                addMessage(ChatFormatter.systemMessage("Kicked ${target.displayName}"))
+                addMessage(chatFormatter.systemMessage("Kicked ${target.displayName}"))
             }
 
             is Command.Ban -> {
                 val target = resolveTarget(command.target, client)
                 if (target == null) {
-                    addMessage(ChatFormatter.errorMessage("Player not found: ${command.target}"))
+                    addMessage(chatFormatter.errorMessage("Player not found: ${command.target}"))
                     return
                 }
                 client.room.ban(target.memberNumber)
-                addMessage(ChatFormatter.systemMessage("Banned ${target.displayName}"))
+                addMessage(chatFormatter.systemMessage("Banned ${target.displayName}"))
             }
 
             is Command.Help -> {
-                addMessage(ChatFormatter.helpMessage("=== Commands ==="))
-                addMessage(ChatFormatter.helpMessage("/w <target> <msg> - Whisper to player"))
-                addMessage(ChatFormatter.helpMessage("/me <text> - Emote action"))
-                addMessage(ChatFormatter.helpMessage("/leave - Leave current room"))
-                addMessage(ChatFormatter.helpMessage("/rooms - Leave room and return to lobby"))
-                addMessage(ChatFormatter.helpMessage("/kick <target> - Kick player (admin)"))
-                addMessage(ChatFormatter.helpMessage("/ban <target> - Ban player (admin)"))
-                addMessage(ChatFormatter.helpMessage("/quit - Exit program"))
-                addMessage(ChatFormatter.helpMessage("Target: name or #12345"))
+                addMessage(chatFormatter.helpMessage("=== Commands ==="))
+                addMessage(chatFormatter.helpMessage("/w <target> <msg> - Whisper to player"))
+                addMessage(chatFormatter.helpMessage("/me <text> - Emote action"))
+                addMessage(chatFormatter.helpMessage("/leave - Leave current room"))
+                addMessage(chatFormatter.helpMessage("/rooms - Leave room and return to lobby"))
+                addMessage(chatFormatter.helpMessage("/kick <target> - Kick player (admin)"))
+                addMessage(chatFormatter.helpMessage("/ban <target> - Ban player (admin)"))
+                addMessage(chatFormatter.helpMessage("/quit - Exit program"))
+                addMessage(chatFormatter.helpMessage("Target: name or #12345"))
             }
 
             is Command.Quit -> {

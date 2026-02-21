@@ -26,7 +26,11 @@ class LoginScreen(
 
     override fun createWindow(): BasicWindow {
         window = BasicWindow("Razor Client - Login")
-        window.setHints(listOf(Window.Hint.CENTERED))
+        val hints = mutableListOf<Window.Hint>(Window.Hint.CENTERED)
+        if (app.config.disableShadows != false) {
+            hints.add(Window.Hint.NO_POST_RENDERING)
+        }
+        window.setHints(hints)
 
         val panel = Panel(GridLayout(2))
 

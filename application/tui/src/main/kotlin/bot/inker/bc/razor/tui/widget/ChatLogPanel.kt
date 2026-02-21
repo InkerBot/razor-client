@@ -10,23 +10,27 @@ import com.googlecode.lanterna.gui2.TextGUIGraphics
 class ChatLogPanel(private val maxMessages: Int = 500) : AbstractComponent<ChatLogPanel>() {
     private val messages = ArrayDeque<FormattedMessage>(maxMessages)
     private var scrollOffset = 0 // visual line offset
+    private var pinToBottom = true
 
     fun addMessage(message: FormattedMessage) {
         if (messages.size >= maxMessages) {
             messages.removeFirst()
         }
         messages.addLast(message)
-        scrollToBottom()
+        if (pinToBottom) {
+            scrollToBottomInternal()
+        }
         invalidate()
     }
 
     fun clear() {
         messages.clear()
         scrollOffset = 0
+        pinToBottom = true
         invalidate()
     }
 
-    private fun scrollToBottom() {
+    private fun scrollToBottomInternal() {
         val visibleRows = size?.rows ?: 20
         val cols = size?.columns ?: 60
         val totalLines = totalVisualLines(cols)
@@ -35,6 +39,7 @@ class ChatLogPanel(private val maxMessages: Int = 500) : AbstractComponent<ChatL
 
     fun scrollUp(lines: Int = 1) {
         scrollOffset = maxOf(0, scrollOffset - lines)
+        pinToBottom = false
         invalidate()
     }
 
@@ -42,7 +47,23 @@ class ChatLogPanel(private val maxMessages: Int = 500) : AbstractComponent<ChatL
         val visibleRows = size?.rows ?: 20
         val cols = size?.columns ?: 60
         val totalLines = totalVisualLines(cols)
-        scrollOffset = minOf(maxOf(0, totalLines - visibleRows), scrollOffset + lines)
+        val maxOffset = maxOf(0, totalLines - visibleRows)
+        scrollOffset = minOf(maxOffset, scrollOffset + lines)
+        if (scrollOffset >= maxOffset) {
+            pinToBottom = true
+        }
+        invalidate()
+    }
+
+    fun scrollToTop() {
+        scrollOffset = 0
+        pinToBottom = false
+        invalidate()
+    }
+
+    fun scrollToBottom() {
+        scrollToBottomInternal()
+        pinToBottom = true
         invalidate()
     }
 
@@ -54,7 +75,7 @@ class ChatLogPanel(private val maxMessages: Int = 500) : AbstractComponent<ChatL
     override fun createDefaultRenderer(): ComponentRenderer<ChatLogPanel> {
         return object : ComponentRenderer<ChatLogPanel> {
             override fun getPreferredSize(component: ChatLogPanel): TerminalSize {
-                return TerminalSize(60, 20)
+                return TerminalSize(20, 5)
             }
 
             override fun drawComponent(graphics: TextGUIGraphics, component: ChatLogPanel) {
@@ -81,8 +102,10 @@ class ChatLogPanel(private val maxMessages: Int = 500) : AbstractComponent<ChatL
 
     companion object {
         private fun wrapLineCount(text: String, cols: Int): Int {
-            if (cols <= 0 || text.isEmpty()) return 1
-            return (text.length + cols - 1) / cols
+            if (cols <= 0) return maxOf(1, text.count { it == '\n' } + 1)
+            return text.split('\n').sumOf { line ->
+                if (line.isEmpty()) 1 else (line.length + cols - 1) / cols
+            }
         }
 
         private fun buildVisualLines(
@@ -91,14 +114,16 @@ class ChatLogPanel(private val maxMessages: Int = 500) : AbstractComponent<ChatL
         ): List<Pair<String, TextColor>> {
             val result = mutableListOf<Pair<String, TextColor>>()
             for (msg in messages) {
-                if (cols <= 0 || msg.text.length <= cols) {
-                    result.add(msg.text to msg.color)
-                } else {
-                    var start = 0
-                    while (start < msg.text.length) {
-                        val end = minOf(start + cols, msg.text.length)
-                        result.add(msg.text.substring(start, end) to msg.color)
-                        start = end
+                for (line in msg.text.split('\n')) {
+                    if (cols <= 0 || line.length <= cols) {
+                        result.add(line to msg.color)
+                    } else {
+                        var start = 0
+                        while (start < line.length) {
+                            val end = minOf(start + cols, line.length)
+                            result.add(line.substring(start, end) to msg.color)
+                            start = end
+                        }
                     }
                 }
             }

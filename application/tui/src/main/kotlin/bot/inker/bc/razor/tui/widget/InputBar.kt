@@ -10,16 +10,37 @@ class InputBar(private val onSubmit: (String) -> Unit) : Panel(LinearLayout(Dire
 
     init {
         addComponent(Label("> "))
-        textBox = object : TextBox(TerminalSize(60, 1), "") {
+        textBox = object : TextBox(TerminalSize(10, 1), "", Style.MULTI_LINE) {
+            private fun updateHeight() {
+                val width = size?.columns ?: 10
+                setPreferredSize(TerminalSize(width, lineCount.coerceIn(1, 5)))
+            }
+
             override fun handleKeyStroke(keyStroke: KeyStroke): Interactable.Result {
                 if (keyStroke.keyType == KeyType.Enter) {
+                    val caretLine = caretPosition.row
+                    val line = getLine(caretLine)
+                    if (line.endsWith("\\")) {
+                        val allLines = (0 until lineCount).map { i ->
+                            if (i == caretLine) line.substring(0, line.length - 1) else getLine(i)
+                        }
+                        setText(allLines.joinToString("\n"))
+                        setCaretPosition(caretLine, allLines[caretLine].length)
+                        val result = super.handleKeyStroke(keyStroke)
+                        updateHeight()
+                        return result
+                    }
                     submit()
                     return Interactable.Result.HANDLED
                 }
                 return super.handleKeyStroke(keyStroke)
             }
         }
-        addComponent(textBox.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)))
+        addComponent(
+            textBox.setLayoutData(
+                LinearLayout.createLayoutData(LinearLayout.Alignment.Fill, LinearLayout.GrowPolicy.CanGrow)
+            )
+        )
     }
 
     fun submit() {
@@ -27,6 +48,9 @@ class InputBar(private val onSubmit: (String) -> Unit) : Panel(LinearLayout(Dire
         if (text.isNotEmpty()) {
             onSubmit(text)
             textBox.text = ""
+            textBox.setCaretPosition(0, 0)
+            val width = textBox.size?.columns ?: 10
+            textBox.setPreferredSize(TerminalSize(width, 1))
         }
     }
 

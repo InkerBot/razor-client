@@ -12,6 +12,8 @@ data class TuiConfig(
     val proxyHost: String = "",
     val proxyPort: Int = 0,
     val lastUsername: String = "",
+    val colorScheme: ColorScheme = ColorScheme(),
+    val disableShadows: Boolean? = null,
 ) {
     companion object {
         private val CONFIG_PATH: Path = Path.of("razor-tui.json")

@@ -44,7 +44,9 @@ class ChatMessageResolver(private val translations: TranslationManager) {
     }
 
     private fun lookupActivityText(key: String): String {
-        return translations.activityDictionaryText(key)
+        translations.activityDictionaryTextOrNull(key)?.let { return it }
+        translations.modActivityDialog(key)?.let { return it }
+        return key
     }
 
     private fun lookupServerMessageText(key: String): String {
@@ -101,14 +103,14 @@ class ChatMessageResolver(private val translations: TranslationManager) {
         if (entry.has("SourceCharacter")) {
             val memberNumber = entry.get("SourceCharacter").asInt
             val char = characterLookup(memberNumber)
-            substitutions["SourceCharacter"] = char?.name ?: memberNumber.toString()
+            substitutions["SourceCharacter"] = char?.displayName ?: memberNumber.toString()
         }
 
         // TargetCharacter: { "TargetCharacter": memberNumber }
         if (entry.has("TargetCharacter")) {
             val memberNumber = entry.get("TargetCharacter").asInt
             val char = characterLookup(memberNumber)
-            val name = char?.name ?: memberNumber.toString()
+            val name = char?.displayName ?: memberNumber.toString()
             substitutions["TargetCharacter"] = name
             substitutions["TargetCharacterName"] = name
             substitutions["DestinationCharacter"] = name

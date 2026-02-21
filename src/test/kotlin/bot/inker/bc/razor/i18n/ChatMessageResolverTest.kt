@@ -22,12 +22,14 @@ class ChatMessageResolverTest {
     private fun makeCharacter(
         memberNumber: Int,
         name: String,
-        rawData: com.google.gson.JsonElement? = null
+        rawData: com.google.gson.JsonElement? = null,
+        nickname: String? = null,
     ): CharacterState {
         return CharacterState(
             id = memberNumber.toString(),
             memberNumber = memberNumber,
             name = name,
+            nickname = nickname,
             rawData = rawData,
         )
     }
@@ -96,6 +98,36 @@ class ChatMessageResolverTest {
         assertTrue(result.contains("Bob"))
         assertFalse(result.contains("SourceCharacter"))
         assertFalse(result.contains("DestinationCharacter"))
+    }
+
+    @Test
+    fun actionMessageUsesDisplayNameWhenNicknameSet() {
+        val dict = JsonArray().apply {
+            add(JsonObject().apply { addProperty("SourceCharacter", 100) })
+            add(JsonObject().apply {
+                addProperty("GroupName", "ItemArms")
+                addProperty("AssetName", "HempRope")
+                addProperty("Tag", "NextAsset")
+            })
+            add(JsonObject().apply { addProperty("TargetCharacter", 200) })
+            add(JsonObject().apply { addProperty("FocusGroupName", "ItemArms") })
+        }
+
+        val msg = ReceivedChatMessage(
+            sender = 100,
+            content = "ActionUse",
+            type = ChatMessageType.ACTION,
+            dictionary = dict,
+        )
+
+        val alice = makeCharacter(100, "Alice", nickname = "Ally")
+        val bob = makeCharacter(200, "Bob", nickname = "Bobby")
+        val result = resolver.resolve(msg, characterLookup(alice, bob))
+
+        assertTrue(result.contains("Ally"))
+        assertTrue(result.contains("Bobby"))
+        assertFalse(result.contains("Alice"))
+        assertFalse(result.contains("Bob"))
     }
 
     // --- Activity messages ---
@@ -294,5 +326,41 @@ class ChatMessageResolverTest {
 
         val result = resolver.resolve(msg) { null }
         assertEquals("CompletelyFakeContentKey", result)
+    }
+
+    // --- Mod activity messages ---
+
+    @Test
+    fun activityMessageFallsBackToModActivity() {
+        val dict = JsonArray().apply {
+            add(JsonObject().apply { addProperty("SourceCharacter", 100) })
+            add(JsonObject().apply { addProperty("TargetCharacter", 200) })
+        }
+
+        val msg = ReceivedChatMessage(
+            sender = 100,
+            content = "TestModPoke",
+            type = ChatMessageType.ACTIVITY,
+            dictionary = dict,
+        )
+
+        val alice = makeCharacter(100, "Alice")
+        val bob = makeCharacter(200, "Bob")
+        val result = resolver.resolve(msg, characterLookup(alice, bob))
+        // Should use mod activity dialog: "SourceCharacter pokes TargetCharacter."
+        assertEquals("Alice pokes Bob.", result)
+    }
+
+    @Test
+    fun activityMessageReturnsKeyWhenNotInBaseOrMod() {
+        val msg = ReceivedChatMessage(
+            sender = 100,
+            content = "CompletelyUnknownActivity",
+            type = ChatMessageType.ACTIVITY,
+            dictionary = null,
+        )
+
+        val result = resolver.resolve(msg) { null }
+        assertEquals("CompletelyUnknownActivity", result)
     }
 }

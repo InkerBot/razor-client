@@ -31,7 +31,11 @@ class LobbyScreen(private val app: TuiApplication) : Screen {
 
     override fun createWindow(): BasicWindow {
         window = BasicWindow("Razor Client - Lobby")
-        window.setHints(listOf(Window.Hint.EXPANDED))
+        val hints = mutableListOf<Window.Hint>(Window.Hint.EXPANDED)
+        if (app.config.disableShadows != false) {
+            hints.add(Window.Hint.NO_POST_RENDERING)
+        }
+        window.setHints(hints)
 
         val mainPanel = Panel(LinearLayout(Direction.VERTICAL))
 

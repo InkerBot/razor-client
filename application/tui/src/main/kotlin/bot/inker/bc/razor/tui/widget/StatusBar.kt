@@ -1,12 +1,13 @@
 package bot.inker.bc.razor.tui.widget
 
+import bot.inker.bc.razor.tui.ColorScheme
 import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.TextColor
 import com.googlecode.lanterna.gui2.AbstractComponent
 import com.googlecode.lanterna.gui2.ComponentRenderer
 import com.googlecode.lanterna.gui2.TextGUIGraphics
 
-class StatusBar : AbstractComponent<StatusBar>() {
+class StatusBar(private val scheme: ColorScheme) : AbstractComponent<StatusBar>() {
     var connectionStatus: String = "Connected"
         set(value) {
             field = value; invalidate()
@@ -23,13 +24,13 @@ class StatusBar : AbstractComponent<StatusBar>() {
     override fun createDefaultRenderer(): ComponentRenderer<StatusBar> {
         return object : ComponentRenderer<StatusBar> {
             override fun getPreferredSize(component: StatusBar): TerminalSize {
-                return TerminalSize(80, 1)
+                return TerminalSize(10, 1)
             }
 
             override fun drawComponent(graphics: TextGUIGraphics, component: StatusBar) {
                 val cols = graphics.size.columns
-                graphics.setBackgroundColor(TextColor.ANSI.BLUE)
-                graphics.setForegroundColor(TextColor.ANSI.WHITE)
+                graphics.setBackgroundColor(ColorScheme.resolve(component.scheme.statusBarBackground))
+                graphics.setForegroundColor(ColorScheme.resolve(component.scheme.statusBarForeground))
                 graphics.fill(' ')
 
                 val parts = mutableListOf<String>()

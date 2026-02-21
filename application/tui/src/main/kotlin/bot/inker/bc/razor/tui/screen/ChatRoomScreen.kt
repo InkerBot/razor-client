@@ -10,8 +10,11 @@ import bot.inker.bc.razor.tui.widget.ChatLogPanel
 import bot.inker.bc.razor.tui.widget.InputBar
 import bot.inker.bc.razor.tui.widget.MemberListPanel
 import bot.inker.bc.razor.tui.widget.StatusBar
-import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.gui2.*
+import com.googlecode.lanterna.input.KeyStroke
+import com.googlecode.lanterna.input.KeyType
+import com.googlecode.lanterna.input.MouseAction
+import com.googlecode.lanterna.input.MouseActionType
 
 class ChatRoomScreen(private val app: TuiApplication) : Screen {
     private lateinit var window: BasicWindow
@@ -21,12 +24,65 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
     private lateinit var statusBar: StatusBar
     private lateinit var inputBar: InputBar
     private lateinit var commandExecutor: CommandExecutor
+    private lateinit var chatFormatter: ChatFormatter
 
     override fun createWindow(): BasicWindow {
-        window = BasicWindow("Chat Room")
-        window.setHints(listOf(Window.Hint.EXPANDED))
+        val scheme = app.config.colorScheme
+        chatFormatter = ChatFormatter(scheme)
 
-        commandExecutor = CommandExecutor(app) { msg -> chatLog.addMessage(msg) }
+        // Initialize chatLog early so handleInput can reference it
+        chatLog = ChatLogPanel()
+
+        commandExecutor = CommandExecutor(app, chatFormatter) { msg -> chatLog.addMessage(msg) }
+
+        window = object : BasicWindow("Chat Room") {
+            override fun handleInput(keyStroke: KeyStroke): Boolean {
+                if (keyStroke is MouseAction) {
+                    when (keyStroke.actionType) {
+                        MouseActionType.SCROLL_UP -> {
+                            chatLog.scrollUp(3)
+                            return true
+                        }
+
+                        MouseActionType.SCROLL_DOWN -> {
+                            chatLog.scrollDown(3)
+                            return true
+                        }
+
+                        else -> {}
+                    }
+                }
+                when (keyStroke.keyType) {
+                    KeyType.PageUp -> {
+                        chatLog.scrollUp(chatLog.size?.rows ?: 20)
+                        return true
+                    }
+
+                    KeyType.PageDown -> {
+                        chatLog.scrollDown(chatLog.size?.rows ?: 20)
+                        return true
+                    }
+
+                    KeyType.Home -> if (keyStroke.isCtrlDown) {
+                        chatLog.scrollToTop()
+                        return true
+                    }
+
+                    KeyType.End -> if (keyStroke.isCtrlDown) {
+                        chatLog.scrollToBottom()
+                        return true
+                    }
+
+                    else -> {}
+                }
+                return super.handleInput(keyStroke)
+            }
+        }
+        val hints = mutableListOf<Window.Hint>(Window.Hint.EXPANDED)
+        if (app.config.disableShadows != false) {
+            hints.add(Window.Hint.NO_POST_RENDERING)
+        }
+        window.setHints(hints)
 
         val mainPanel = Panel(BorderLayout())
 
@@ -37,15 +93,20 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
         // Center: member list + chat log
         val centerPanel = Panel(LinearLayout(Direction.HORIZONTAL))
 
-        memberList = MemberListPanel()
-        memberList.preferredSize = TerminalSize(22, 20)
-        centerPanel.addComponent(memberList.withBorder(Borders.singleLine("Members")))
+        memberList = MemberListPanel(scheme)
+        centerPanel.addComponent(
+            memberList.withBorder(Borders.singleLine("Members"))
+                .setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill))
+        )
 
-        chatLog = ChatLogPanel()
-        chatLog.preferredSize = TerminalSize(60, 20)
         centerPanel.addComponent(
             chatLog.withBorder(Borders.singleLine("Chat"))
-                .setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill))
+                .setLayoutData(
+                    LinearLayout.createLayoutData(
+                        LinearLayout.Alignment.Fill,
+                        LinearLayout.GrowPolicy.CanGrow
+                    )
+                )
         )
 
         mainPanel.addComponent(centerPanel, BorderLayout.Location.CENTER)
@@ -59,7 +120,7 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
         }
         bottomPanel.addComponent(inputBar.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)))
 
-        statusBar = StatusBar()
+        statusBar = StatusBar(scheme)
         bottomPanel.addComponent(statusBar.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)))
 
         mainPanel.addComponent(bottomPanel, BorderLayout.Location.BOTTOM)
@@ -104,7 +165,7 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
                 val resolvedContent = app.messageResolver.resolve(msg) { memberNumber ->
                     characters?.find { it.memberNumber == memberNumber }
                 }
-                val formatted = ChatFormatter.format(msg, senderName, targetName, resolvedContent)
+                val formatted = chatFormatter.format(msg, senderName, targetName, resolvedContent)
                 chatLog.addMessage(formatted)
             }
 
@@ -117,7 +178,7 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
                 val name = client?.room?.characters
                     ?.find { it.memberNumber == event.memberNumber }?.displayName
                     ?: "#${event.memberNumber}"
-                chatLog.addMessage(ChatFormatter.systemMessage("$name left"))
+                chatLog.addMessage(chatFormatter.systemMessage("$name left"))
                 // State already updated by razor-client before event dispatch
                 refreshState()
             }
@@ -162,7 +223,7 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
                 } else {
                     "Beep from $fromName"
                 }
-                chatLog.addMessage(ChatFormatter.systemMessage(msg))
+                chatLog.addMessage(chatFormatter.systemMessage(msg))
             }
 
             is RazorEvent.ServerInfo -> {

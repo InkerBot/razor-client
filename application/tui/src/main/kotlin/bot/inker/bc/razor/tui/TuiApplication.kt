@@ -8,6 +8,8 @@ import bot.inker.bc.razor.tui.screen.*
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI
 import com.googlecode.lanterna.screen.TerminalScreen
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
+import com.googlecode.lanterna.terminal.ExtendedTerminal
+import com.googlecode.lanterna.terminal.MouseCaptureMode
 import com.googlecode.lanterna.terminal.Terminal
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -43,6 +45,14 @@ class TuiApplication(
         val terminal = createTerminal()
         terminalScreen = TerminalScreen(terminal)
         terminalScreen.startScreen()
+
+        if (terminal is ExtendedTerminal) {
+            try {
+                terminal.setMouseCaptureMode(MouseCaptureMode.CLICK_RELEASE)
+            } catch (_: Exception) {
+                // Mouse capture not supported on this terminal type
+            }
+        }
 
         gui = MultiWindowTextGUI(terminalScreen)
         eventBridge = TuiEventBridge(gui, screenManager)

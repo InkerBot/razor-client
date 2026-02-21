@@ -19,7 +19,11 @@ class SettingsScreen(private val app: TuiApplication) : Screen {
         val config = app.config
 
         window = BasicWindow("Razor Client - Settings")
-        window.setHints(listOf(Window.Hint.CENTERED))
+        val hints = mutableListOf<Window.Hint>(Window.Hint.CENTERED)
+        if (app.config.disableShadows != false) {
+            hints.add(Window.Hint.NO_POST_RENDERING)
+        }
+        window.setHints(hints)
 
         val panel = Panel(GridLayout(2))
 
@@ -72,6 +76,8 @@ class SettingsScreen(private val app: TuiApplication) : Screen {
             proxyHost = proxyHostInput.text.trim(),
             proxyPort = proxyPortInput.text.trim().toIntOrNull() ?: 0,
             lastUsername = app.config.lastUsername,
+            colorScheme = app.config.colorScheme,
+            disableShadows = app.config.disableShadows,
         )
         app.config = config
         TuiConfig.save(config)

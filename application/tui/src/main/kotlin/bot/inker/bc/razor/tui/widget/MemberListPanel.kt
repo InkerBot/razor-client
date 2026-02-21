@@ -1,13 +1,14 @@
 package bot.inker.bc.razor.tui.widget
 
 import bot.inker.bc.razor.state.CharacterState
+import bot.inker.bc.razor.tui.ColorScheme
 import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.TextColor
 import com.googlecode.lanterna.gui2.AbstractComponent
 import com.googlecode.lanterna.gui2.ComponentRenderer
 import com.googlecode.lanterna.gui2.TextGUIGraphics
 
-class MemberListPanel : AbstractComponent<MemberListPanel>() {
+class MemberListPanel(private val scheme: ColorScheme) : AbstractComponent<MemberListPanel>() {
     private var members: List<CharacterState> = emptyList()
     private var adminList: List<Int> = emptyList()
 
@@ -20,7 +21,7 @@ class MemberListPanel : AbstractComponent<MemberListPanel>() {
     override fun createDefaultRenderer(): ComponentRenderer<MemberListPanel> {
         return object : ComponentRenderer<MemberListPanel> {
             override fun getPreferredSize(component: MemberListPanel): TerminalSize {
-                return TerminalSize(20, 10)
+                return TerminalSize(20, 5)
             }
 
             override fun drawComponent(graphics: TextGUIGraphics, component: MemberListPanel) {
@@ -29,10 +30,10 @@ class MemberListPanel : AbstractComponent<MemberListPanel>() {
                 val rows = graphics.size.rows
 
                 val header = "Members (${component.members.size})"
-                graphics.setForegroundColor(TextColor.ANSI.CYAN)
+                graphics.setForegroundColor(ColorScheme.resolve(component.scheme.memberListHeader))
                 graphics.putString(0, 0, header.take(cols))
 
-                graphics.setForegroundColor(TextColor.ANSI.WHITE_BRIGHT)
+                graphics.setForegroundColor(ColorScheme.resolve(component.scheme.memberListSeparator))
                 if (cols > 1) {
                     graphics.putString(0, 1, "-".repeat(minOf(cols, header.length)))
                 }
@@ -46,9 +47,9 @@ class MemberListPanel : AbstractComponent<MemberListPanel>() {
                     val text = "$prefix${member.displayName}"
 
                     if (isAdmin) {
-                        graphics.setForegroundColor(TextColor.ANSI.YELLOW)
+                        graphics.setForegroundColor(ColorScheme.resolve(component.scheme.memberListAdmin))
                     } else {
-                        graphics.setForegroundColor(TextColor.ANSI.DEFAULT)
+                        graphics.setForegroundColor(ColorScheme.resolve(component.scheme.memberListDefault))
                     }
                     graphics.putString(0, row, text.take(cols))
                 }
