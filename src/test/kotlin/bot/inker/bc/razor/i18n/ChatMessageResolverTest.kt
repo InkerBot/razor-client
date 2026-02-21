@@ -120,12 +120,12 @@ class ChatMessageResolverTest {
             dictionary = dict,
         )
 
-        val alice = makeCharacter(100, "Alice", nickname = "Ally")
-        val bob = makeCharacter(200, "Bob", nickname = "Bobby")
+        val alice = makeCharacter(100, "Alice", nickname = "Kitten")
+        val bob = makeCharacter(200, "Bob", nickname = "Puppy")
         val result = resolver.resolve(msg, characterLookup(alice, bob))
 
-        assertTrue(result.contains("Ally"))
-        assertTrue(result.contains("Bobby"))
+        assertTrue(result.contains("Kitten"))
+        assertTrue(result.contains("Puppy"))
         assertFalse(result.contains("Alice"))
         assertFalse(result.contains("Bob"))
     }
