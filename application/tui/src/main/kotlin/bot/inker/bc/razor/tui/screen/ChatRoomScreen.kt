@@ -9,6 +9,7 @@ import bot.inker.bc.razor.tui.format.ChatFormatter
 import bot.inker.bc.razor.tui.widget.ChatLogPanel
 import bot.inker.bc.razor.tui.widget.InputBar
 import bot.inker.bc.razor.tui.widget.MemberListPanel
+import bot.inker.bc.razor.tui.widget.PlayerDetailDialog
 import bot.inker.bc.razor.tui.widget.StatusBar
 import com.googlecode.lanterna.gui2.*
 import com.googlecode.lanterna.input.KeyStroke
@@ -53,23 +54,32 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
                     }
                 }
                 when (keyStroke.keyType) {
-                    KeyType.PageUp -> {
+                    KeyType.PAGE_UP -> {
                         chatLog.scrollUp(chatLog.size?.rows ?: 20)
                         return true
                     }
 
-                    KeyType.PageDown -> {
+                    KeyType.PAGE_DOWN -> {
                         chatLog.scrollDown(chatLog.size?.rows ?: 20)
                         return true
                     }
 
-                    KeyType.Home -> if (keyStroke.isCtrlDown) {
+                    KeyType.HOME -> if (keyStroke.isCtrlDown) {
                         chatLog.scrollToTop()
                         return true
                     }
 
-                    KeyType.End -> if (keyStroke.isCtrlDown) {
+                    KeyType.END -> if (keyStroke.isCtrlDown) {
                         chatLog.scrollToBottom()
+                        return true
+                    }
+
+                    KeyType.TAB -> {
+                        if (focusedInteractable === memberList) {
+                            inputBar.focus()
+                        } else {
+                            memberList.takeFocus()
+                        }
                         return true
                     }
 
@@ -93,18 +103,20 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
         // Center: member list + chat log
         val centerPanel = Panel(LinearLayout(Direction.HORIZONTAL))
 
-        memberList = MemberListPanel(scheme)
+        memberList = MemberListPanel(scheme) { character ->
+            PlayerDetailDialog.show(app.gui, character, scheme, app.config.disableShadows)
+        }
         centerPanel.addComponent(
             memberList.withBorder(Borders.singleLine("Members"))
-                .setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill))
+                .setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.FILL))
         )
 
         centerPanel.addComponent(
             chatLog.withBorder(Borders.singleLine("Chat"))
                 .setLayoutData(
                     LinearLayout.createLayoutData(
-                        LinearLayout.Alignment.Fill,
-                        LinearLayout.GrowPolicy.CanGrow
+                        LinearLayout.Alignment.FILL,
+                        LinearLayout.GrowPolicy.CAN_GROW
                     )
                 )
         )
@@ -118,10 +130,10 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
             val cmd = CommandParser.parse(text)
             commandExecutor.execute(cmd)
         }
-        bottomPanel.addComponent(inputBar.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)))
+        bottomPanel.addComponent(inputBar.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.FILL)))
 
         statusBar = StatusBar(scheme)
-        bottomPanel.addComponent(statusBar.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)))
+        bottomPanel.addComponent(statusBar.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.FILL)))
 
         mainPanel.addComponent(bottomPanel, BorderLayout.Location.BOTTOM)
 

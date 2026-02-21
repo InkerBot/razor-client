@@ -17,7 +17,7 @@ class InputBar(private val onSubmit: (String) -> Unit) : Panel(LinearLayout(Dire
             }
 
             override fun handleKeyStroke(keyStroke: KeyStroke): Interactable.Result {
-                if (keyStroke.keyType == KeyType.Enter) {
+                if (keyStroke.keyType == KeyType.ENTER) {
                     val caretLine = caretPosition.row
                     val line = getLine(caretLine)
                     if (line.endsWith("\\")) {
@@ -38,7 +38,7 @@ class InputBar(private val onSubmit: (String) -> Unit) : Panel(LinearLayout(Dire
         }
         addComponent(
             textBox.setLayoutData(
-                LinearLayout.createLayoutData(LinearLayout.Alignment.Fill, LinearLayout.GrowPolicy.CanGrow)
+                LinearLayout.createLayoutData(LinearLayout.Alignment.FILL, LinearLayout.GrowPolicy.CAN_GROW)
             )
         )
     }

@@ -55,6 +55,7 @@ class SettingsScreen(private val app: TuiApplication) : Screen {
 
         val buttonPanel = Panel(LinearLayout(Direction.HORIZONTAL))
         buttonPanel.addComponent(Button("Save & Reconnect") { onSaveAndReconnect() })
+        buttonPanel.addComponent(Button("Color Scheme") { app.navigateToColorScheme() })
         buttonPanel.addComponent(Button("Back") { app.navigateToLogin() })
         panel.addComponent(buttonPanel.setLayoutData(GridLayout.createHorizontallyFilledLayoutData(2)))
 

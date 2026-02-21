@@ -3,6 +3,9 @@ package bot.inker.bc.razor.tui
 import com.googlecode.lanterna.TextColor
 
 data class ColorScheme(
+    // Window colors
+    val windowForeground: String = "DEFAULT",
+    val windowBackground: String = "DEFAULT",
     // ChatFormatter colors
     val chatMessage: String = "DEFAULT",
     val whisperMessage: String = "MAGENTA",
@@ -38,12 +41,16 @@ data class ColorScheme(
         fun default(): ColorScheme = ColorScheme()
 
         fun dark(): ColorScheme = ColorScheme(
+            windowForeground = "WHITE",
+            windowBackground = "BLACK",
             chatMessage = "WHITE",
             statusBarBackground = "BLACK_BRIGHT",
             statusBarForeground = "WHITE_BRIGHT",
         )
 
         fun light(): ColorScheme = ColorScheme(
+            windowForeground = "BLACK",
+            windowBackground = "WHITE",
             chatMessage = "BLACK",
             whisperMessage = "MAGENTA",
             emoteMessage = "YELLOW",

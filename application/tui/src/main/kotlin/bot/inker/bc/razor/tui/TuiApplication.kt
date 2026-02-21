@@ -5,6 +5,8 @@ import bot.inker.bc.razor.i18n.ChatMessageResolver
 import bot.inker.bc.razor.i18n.TranslationManager
 import bot.inker.bc.razor.tui.event.TuiEventBridge
 import bot.inker.bc.razor.tui.screen.*
+import com.googlecode.lanterna.TextColor
+import com.googlecode.lanterna.graphics.SimpleTheme
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI
 import com.googlecode.lanterna.screen.TerminalScreen
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
@@ -55,6 +57,7 @@ class TuiApplication(
         }
 
         gui = MultiWindowTextGUI(terminalScreen)
+        applyTheme()
         eventBridge = TuiEventBridge(gui, screenManager)
 
         // Auto-connect with saved/default config and go straight to login
@@ -118,6 +121,11 @@ class TuiApplication(
         gui.activeWindow?.close()
     }
 
+    fun navigateToColorScheme() {
+        nextScreen = ColorSchemeScreen(this)
+        gui.activeWindow?.close()
+    }
+
     fun navigateToLogin(errorMessage: String? = null) {
         nextScreen = LoginScreen(this, errorMessage)
         gui.activeWindow?.close()
@@ -166,6 +174,18 @@ class TuiApplication(
             "Cannot create terminal. Please run from an interactive terminal (with /dev/tty) " +
                     "or a graphical environment (with a working DISPLAY)."
         )
+    }
+
+    fun applyTheme() {
+        val scheme = config.colorScheme
+        val fg = ColorScheme.resolve(scheme.windowForeground)
+        val bg = ColorScheme.resolve(scheme.windowBackground)
+        val selectedFg = bg
+        val selectedBg = fg
+        val theme = SimpleTheme.makeTheme(
+            true, fg, bg, fg, bg, selectedFg, selectedBg, bg
+        )
+        gui.theme = theme
     }
 
     private fun closeClient() {

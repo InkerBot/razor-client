@@ -66,7 +66,7 @@ class LobbyScreen(private val app: TuiApplication) : Screen {
         roomTable = Table<String>("Name", "Players", "Creator", "Language", "Locked", "Description")
         roomTable.visibleRows = 20
         roomTable.setSelectAction { onJoinSelected() }
-        mainPanel.addComponent(roomTable.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)))
+        mainPanel.addComponent(roomTable.setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.FILL)))
 
         mainPanel.addComponent(EmptySpace())
 
