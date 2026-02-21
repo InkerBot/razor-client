@@ -441,7 +441,13 @@ internal class EventRouter(
             whiteList = whiteList,
             blackList = blackList,
             labelColor = obj.get("LabelColor")?.takeIf { !it.isJsonNull }?.asString,
-            description = obj.get("Description")?.takeIf { !it.isJsonNull }?.asString,
+            description = obj.get("Description")?.takeIf { !it.isJsonNull }?.asString?.let { desc ->
+                if (desc.startsWith("\u256C")) {
+                    LZString.decompressFromUTF16(desc.substring(1))
+                } else {
+                    desc
+                }
+            },
             title = obj.get("Title")?.takeIf { !it.isJsonNull }?.asString,
             creation = obj.get("Creation")?.takeIf { !it.isJsonNull }?.asLong ?: 0L,
             difficulty = difficulty,

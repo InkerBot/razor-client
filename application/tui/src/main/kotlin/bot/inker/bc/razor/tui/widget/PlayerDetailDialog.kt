@@ -13,6 +13,7 @@ class PlayerDetailDialog(
     character: CharacterState,
     scheme: ColorScheme,
     disableShadows: Boolean?,
+    terminalSize: TerminalSize,
 ) : DialogWindow("Player Info") {
 
     init {
@@ -23,6 +24,9 @@ class PlayerDetailDialog(
             hints.add(Window.Hint.NO_POST_RENDERING)
         }
         setHints(hints)
+
+        val dialogWidth = (terminalSize.columns * 2 / 3).coerceIn(40, 120)
+        val descHeight = (terminalSize.rows * 2 / 5).coerceIn(5, 30)
 
         val mainPanel = Panel(LinearLayout(Direction.VERTICAL))
 
@@ -85,7 +89,7 @@ class PlayerDetailDialog(
         // Description as scrollable read-only TextBox
         character.description?.takeIf { it.isNotBlank() }?.let { desc ->
             mainPanel.addComponent(Label("Description:"))
-            val descBox = TextBox(TerminalSize(50, 8), desc, TextBox.Style.MULTI_LINE)
+            val descBox = TextBox(TerminalSize(dialogWidth, descHeight), desc, TextBox.Style.MULTI_LINE)
                 .setReadOnly(true)
                 .setLayoutData(
                     LinearLayout.createLayoutData(LinearLayout.Alignment.FILL)
@@ -111,7 +115,8 @@ class PlayerDetailDialog(
             scheme: ColorScheme,
             disableShadows: Boolean?,
         ) {
-            val dialog = PlayerDetailDialog(character, scheme, disableShadows)
+            val terminalSize = gui.screen.terminalSize
+            val dialog = PlayerDetailDialog(character, scheme, disableShadows, terminalSize)
             dialog.showDialog(gui)
         }
     }

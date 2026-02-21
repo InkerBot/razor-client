@@ -190,7 +190,6 @@ class ChatRoomScreen(private val app: TuiApplication) : Screen {
                 val name = client?.room?.characters
                     ?.find { it.memberNumber == event.memberNumber }?.displayName
                     ?: "#${event.memberNumber}"
-                chatLog.addMessage(chatFormatter.systemMessage("$name left"))
                 // State already updated by razor-client before event dispatch
                 refreshState()
             }
