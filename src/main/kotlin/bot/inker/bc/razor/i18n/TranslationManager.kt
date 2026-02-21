@@ -19,19 +19,61 @@ class TranslationManager @JvmOverloads constructor(
     private val activityDictionary: Map<String, String> =
         loadSimpleDictionary("bc/i18n/ActivityDictionary.json")
 
-    private val assetStrings: Map<String, String> =
-        loadSimpleDictionary("bc/i18n/assets/AssetStrings.json")
+    private val assetStrings: Map<String, String>
 
     private val colorGroups: Map<String, String> =
         loadSimpleDictionary("bc/i18n/assets/ColorGroups.json")
 
-    private val layerNames: Map<String, String> =
-        loadSimpleDictionary("bc/i18n/assets/LayerNames.json")
+    private val layerNames: Map<String, String>
 
-    private val assetNames: Map<String, Map<String, String>> =
-        loadAssetDictionary("bc/i18n/assets/Female3DCG.json")
+    private val assetNames: Map<String, Map<String, String>>
+
+    private val modActivities: Map<String, ModActivity>
 
     private val screenTextsCache = ConcurrentHashMap<String, Map<String, String>>()
+
+    data class ModActivity(
+        val label: String? = null,
+        val labelSelf: String? = null,
+        val dialog: String? = null,
+        val dialogSelf: String? = null,
+    )
+
+    init {
+        val modIndex = loadModIndex()
+
+        // Load base data
+        var mergedAssetStrings = loadSimpleDictionary("bc/i18n/assets/AssetStrings.json")
+        var mergedLayerNames = loadSimpleDictionary("bc/i18n/assets/LayerNames.json")
+        var mergedAssetNames = loadAssetDictionary("bc/i18n/assets/Female3DCG.json")
+        val allModActivities = LinkedHashMap<String, ModActivity>()
+
+        // Merge mod data
+        for ((modName, fileTypes) in modIndex) {
+            if ("activities" in fileTypes) {
+                allModActivities.putAll(loadModActivities("bc/i18n/mods/$modName/activities.json"))
+            }
+            if ("assets" in fileTypes) {
+                mergedAssetNames = mergeAssetDictionaries(
+                    mergedAssetNames,
+                    loadAssetDictionary("bc/i18n/mods/$modName/assets.json")
+                )
+            }
+            if ("layerNames" in fileTypes) {
+                mergedLayerNames = mergedLayerNames +
+                    loadSimpleDictionary("bc/i18n/mods/$modName/layerNames.json")
+            }
+            if ("assetStrings" in fileTypes) {
+                mergedAssetStrings = mergedAssetStrings +
+                    loadSimpleDictionary("bc/i18n/mods/$modName/assetStrings.json")
+            }
+        }
+
+        assetStrings = mergedAssetStrings
+        layerNames = mergedLayerNames
+        assetNames = mergedAssetNames
+        modActivities = allModActivities
+    }
 
 
     fun interfaceText(key: String): String = interfaceTexts[key] ?: key
@@ -74,6 +116,15 @@ class TranslationManager @JvmOverloads constructor(
         assetNames[group]?.get("") ?: group
 
 
+    fun modActivityLabel(name: String): String? = modActivities[name]?.label
+
+    fun modActivityLabelSelf(name: String): String? = modActivities[name]?.labelSelf
+
+    fun modActivityDialog(name: String): String? = modActivities[name]?.dialog
+
+    fun modActivityDialogSelf(name: String): String? = modActivities[name]?.dialogSelf
+
+
     fun lookupText(key: String): String? {
         interfaceTexts[key]?.let { return it }
         activityDictionary[key]?.let { return it }
@@ -81,6 +132,35 @@ class TranslationManager @JvmOverloads constructor(
         return null
     }
 
+
+    private fun loadModIndex(): Map<String, List<String>> {
+        val type: Type = object : TypeToken<Map<String, List<String>>>() {}.type
+        return loadResource("bc/i18n/mods/index.json", type) ?: emptyMap()
+    }
+
+    private fun loadModActivities(resourcePath: String): Map<String, ModActivity> {
+        // Format: { "": { name: { field: value } }, "CN": { name: { field: value } } }
+        val type: Type =
+            object : TypeToken<Map<String, Map<String, Map<String, String>>>>() {}.type
+        val data: Map<String, Map<String, Map<String, String>>> =
+            loadResource(resourcePath, type) ?: return emptyMap()
+
+        val english = data[""] ?: emptyMap()
+        val translated = if (language.isNotEmpty()) data[language] else null
+
+        val result = LinkedHashMap<String, ModActivity>()
+        for (name in english.keys.union(translated?.keys ?: emptySet())) {
+            val enFields = english[name] ?: emptyMap()
+            val trFields = translated?.get(name)
+            result[name] = ModActivity(
+                label = trFields?.get("label") ?: enFields["label"],
+                labelSelf = trFields?.get("labelSelf") ?: enFields["labelSelf"],
+                dialog = trFields?.get("dialog") ?: enFields["dialog"],
+                dialogSelf = trFields?.get("dialogSelf") ?: enFields["dialogSelf"],
+            )
+        }
+        return result
+    }
 
     private fun loadSimpleDictionary(resourcePath: String): Map<String, String> {
         val type: Type = object : TypeToken<Map<String, Map<String, String>>>() {}.type
@@ -104,6 +184,19 @@ class TranslationManager @JvmOverloads constructor(
             val en = english[group] ?: emptyMap()
             val tr = translated[group] ?: emptyMap()
             merged[group] = en + tr
+        }
+        return merged
+    }
+
+    private fun mergeAssetDictionaries(
+        base: Map<String, Map<String, String>>,
+        overlay: Map<String, Map<String, String>>,
+    ): Map<String, Map<String, String>> {
+        if (overlay.isEmpty()) return base
+        val merged = LinkedHashMap(base)
+        for ((group, names) in overlay) {
+            val existing = merged[group]
+            merged[group] = if (existing != null) existing + names else names
         }
         return merged
     }

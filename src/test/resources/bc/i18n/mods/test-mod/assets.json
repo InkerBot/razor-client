@@ -1,0 +1,15 @@
+{
+  "": {
+    "ItemArms": {
+      "TestModCuffs": "Test Mod Cuffs"
+    },
+    "TestModGroup": {
+      "TestModItem": "Test Mod Item"
+    }
+  },
+  "CN": {
+    "ItemArms": {
+      "TestModCuffs": "测试手铐"
+    }
+  }
+}

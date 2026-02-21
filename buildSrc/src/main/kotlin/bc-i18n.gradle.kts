@@ -51,9 +51,6 @@ abstract class GenerateI18nTask : DefaultTask() {
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
-    @get:Internal
-    abstract val modDirs: MapProperty<String, String>
-
     private val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
 
     @TaskAction
@@ -84,16 +81,18 @@ abstract class GenerateI18nTask : DefaultTask() {
 
         processScreenTexts(bcDir, outDir)
 
-        // Process mod directories
-        val projectDir = project.projectDir
-        for ((modName, modPath) in modDirs.get()) {
-            val modDir = projectDir.resolve(modPath)
+        // Process echo mod directories (convention: sibling to BondageClub dir)
+        val docsDir = bcDir.parentFile
+        val modNames = listOf("echo-activity-ext", "echo-clothing-ext")
+        for (modName in modNames) {
+            val modDir = docsDir.resolve(modName)
             if (modDir.exists()) {
                 processModDir(modName, modDir, outDir)
-            } else {
-                logger.warn("Mod directory not found: $modDir")
             }
         }
+
+        // Generate mod index listing available mods and their file types
+        generateModIndex(outDir, modNames)
 
         val jsonCount = outDir.walk().filter { it.extension == "json" }.count()
         logger.lifecycle("Generated $jsonCount i18n JSON files in $outDir")
@@ -284,6 +283,26 @@ abstract class GenerateI18nTask : DefaultTask() {
         }
     }
 
+    private fun generateModIndex(outDir: File, modNames: List<String>) {
+        val modsDir = outDir.resolve("bc/i18n/mods")
+        val index = LinkedHashMap<String, List<String>>()
+        for (modName in modNames) {
+            val modDir = modsDir.resolve(modName)
+            if (!modDir.exists()) continue
+            val fileTypes = modDir.listFiles()
+                ?.filter { it.isFile && it.extension == "json" }
+                ?.map { it.nameWithoutExtension }
+                ?.sorted()
+                ?: continue
+            if (fileTypes.isNotEmpty()) {
+                index[modName] = fileTypes
+            }
+        }
+        if (index.isNotEmpty()) {
+            writeJson(modsDir.resolve("index.json"), index)
+        }
+    }
+
     // ========== Mod Processing ==========
 
     private fun processModDir(modName: String, modDir: File, outDir: File) {
@@ -469,7 +488,8 @@ abstract class GenerateI18nTask : DefaultTask() {
         val groups = mutableListOf<String>()
         val addCallPattern = Regex("""addAssetWithConfig\s*\(""")
         for (callMatch in addCallPattern.findAll(source)) {
-            val afterParen = source.substring(callMatch.range.last)
+            val afterParenStart = callMatch.range.last + 1 // skip past '('
+            val afterParen = source.substring(afterParenStart)
             // Try string literal: addAssetWithConfig("GroupName", ...)
             val stringGroup = Regex("""^\s*"([^"]+)"""").find(afterParen)
             if (stringGroup != null) {
@@ -479,7 +499,7 @@ abstract class GenerateI18nTask : DefaultTask() {
             // Try array literal: addAssetWithConfig(["Group1", "Group2"], ...)
             val arrayGroup = Regex("""^\s*\[""").find(afterParen)
             if (arrayGroup != null) {
-                val bracketStart = callMatch.range.last + arrayGroup.range.first
+                val bracketStart = afterParenStart + afterParen.indexOf('[')
                 val bracketEnd = findMatchingClose(source, bracketStart)
                 if (bracketEnd >= 0) {
                     val arrayBlock = source.substring(bracketStart + 1, bracketEnd)
@@ -491,7 +511,7 @@ abstract class GenerateI18nTask : DefaultTask() {
             val spreadMatch = Regex("""^\s*\.\.\.(\w+)""").find(afterParen)
             if (spreadMatch != null) {
                 val varName = spreadMatch.groupValues[1]
-                val constPattern = Regex("""(?:const|let|var)\s+$varName\s*=\s*\[""")
+                val constPattern = Regex("""(?:const|let|var)\s+${Regex.escape(varName)}\s*=\s*\[""")
                 val constMatch = constPattern.find(source)
                 if (constMatch != null) {
                     val bracketPos = source.indexOf('[', constMatch.range.first)
@@ -900,7 +920,6 @@ val generateI18n = tasks.register<GenerateI18nTask>("generateI18n") {
     group = "bc"
     bondageClubDir.set(extension.bondageClubDir)
     outputDir.set(project.layout.buildDirectory.dir("generated/resources/i18n"))
-    modDirs.set(extension.modDirs)
 
     if (!extension.skipUpdate.get()) {
         dependsOn(updateBondageClub)

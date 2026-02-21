@@ -1,0 +1,10 @@
+{
+  "": {
+    "TestModCuffs/Chain": "Chain",
+    "TestModCuffs/Lock": "Lock"
+  },
+  "CN": {
+    "TestModCuffs/Chain": "链条",
+    "TestModCuffs/Lock": "锁"
+  }
+}

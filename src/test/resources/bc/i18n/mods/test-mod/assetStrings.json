@@ -1,0 +1,9 @@
+{
+  "": {
+    "TestModCuffs/Set": "SourceCharacter locks TestModCuffs on TargetCharacter.",
+    "TestModCuffs/Remove": "SourceCharacter removes TestModCuffs from TargetCharacter."
+  },
+  "CN": {
+    "TestModCuffs/Set": "SourceCharacter给TargetCharacter戴上了TestModCuffs。"
+  }
+}

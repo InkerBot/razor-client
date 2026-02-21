@@ -1,0 +1,22 @@
+{
+  "": {
+    "TestModPoke": {
+      "label": "Poke",
+      "labelSelf": "Poke Self",
+      "dialog": "SourceCharacter pokes TargetCharacter.",
+      "dialogSelf": "SourceCharacter pokes themselves."
+    },
+    "TestModWave": {
+      "label": "Wave",
+      "dialog": "SourceCharacter waves at TargetCharacter."
+    }
+  },
+  "CN": {
+    "TestModPoke": {
+      "label": "戳",
+      "labelSelf": "戳自己",
+      "dialog": "SourceCharacter戳了TargetCharacter。",
+      "dialogSelf": "SourceCharacter戳了自己。"
+    }
+  }
+}
