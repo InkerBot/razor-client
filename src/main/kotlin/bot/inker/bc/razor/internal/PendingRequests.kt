@@ -39,6 +39,16 @@ internal class PendingRequests(
         return true
     }
 
+    fun resetTimeout(key: String) {
+        val entry = pending[key] ?: return
+        entry.timeoutHandle.cancel(false)
+        val newTimeout = executor.schedule({
+            entry.future.completeExceptionally(TimeoutException("Request '$key' timed out after ${timeoutMs}ms"))
+            pending.remove(key)
+        }, timeoutMs, TimeUnit.MILLISECONDS)
+        pending[key] = entry.copy(timeoutHandle = newTimeout)
+    }
+
     fun cancel(key: String) {
         val entry = pending.remove(key) ?: return
         entry.timeoutHandle.cancel(false)

@@ -92,6 +92,7 @@ internal class EventRouter(
 
     private fun handleLoginQueue(payload: String) {
         val position = payload.trim().toIntOrNull() ?: return
+        pendingRequests.resetTimeout("LoginResponse")
         eventBus.dispatch(RazorEvent.LoginQueue(position))
     }
 
