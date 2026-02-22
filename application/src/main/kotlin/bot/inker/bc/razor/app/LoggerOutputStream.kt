@@ -1,4 +1,4 @@
-package bot.inker.bc.razor.tui
+package bot.inker.bc.razor.app
 
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.Logger

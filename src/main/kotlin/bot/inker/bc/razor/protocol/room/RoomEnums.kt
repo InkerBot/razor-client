@@ -1,14 +1,14 @@
 package bot.inker.bc.razor.protocol.room
 
 enum class ChatRoomSpace(val wireValue: String) {
-    MAIN(""),
-    ASYLUM("Asylum"),
-    EXPANDED("X"),
-    MIXED("M");
+    FEMALE_ONLY(""),
+    MIXED("X"),
+    MALE_ONLY("M"),
+    ASYLUM("Asylum");
 
     companion object {
         fun fromWireValue(value: String): ChatRoomSpace {
-            return entries.find { it.wireValue == value } ?: MAIN
+            return entries.find { it.wireValue == value } ?: FEMALE_ONLY
         }
     }
 }

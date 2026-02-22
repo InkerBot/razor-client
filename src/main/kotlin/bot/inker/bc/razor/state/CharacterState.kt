@@ -30,9 +30,9 @@ data class CharacterState(
     val rawData: JsonElement? = null,
 ) : CharacterInfo {
     data class ArousalState(
-        val orgasmTimer: Long? = null,
+        val orgasmTimer: Double? = null,
         val orgasmCount: Int? = null,
         val progress: Double? = null,
-        val progressTimer: Long? = null,
+        val progressTimer: Double? = null,
     )
 }
