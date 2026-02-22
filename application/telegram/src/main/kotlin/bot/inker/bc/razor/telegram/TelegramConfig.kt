@@ -2,8 +2,11 @@ package bot.inker.bc.razor.telegram
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
+
+private val logger = LoggerFactory.getLogger(TelegramConfig::class.java)
 
 data class RoomConfig(
     val description: String = "",
@@ -73,6 +76,7 @@ data class TelegramConfig(
                 val json = Files.readString(CONFIG_PATH)
                 gson.fromJson(json, TelegramConfig::class.java) ?: TelegramConfig()
             } catch (e: Exception) {
+                logger.warn("Failed to load config", e)
                 TelegramConfig()
             }
         }
