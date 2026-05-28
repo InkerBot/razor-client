@@ -38,14 +38,13 @@ class MediaFileServer(
             .addMapping("gif", "image/gif")
             .build()
 
-        val resourceHandler = ResourceHandler(
-            PathResourceManager.builder()
-                .setBase(storagePath)
-                .build()
-        ).setMimeMappings(mimeMappings)
-            .setDirectoryListingEnabled(false)
-
         val removeMediaPrefixHandler = object : HttpHandler {
+            private val resourceHandler = ResourceHandler(
+                PathResourceManager.builder()
+                    .setBase(storagePath)
+                    .build()
+            ).setMimeMappings(mimeMappings).setDirectoryListingEnabled(false)
+
             override fun handleRequest(exchange: HttpServerExchange) {
                 exchange.requestPath = exchange.requestPath.substring("/media".length)
                 exchange.relativePath = exchange.relativePath.substring("/media".length)
@@ -54,11 +53,30 @@ class MediaFileServer(
             }
         }
 
-        val corsHandler = CorsHandler(RoutingHandler().apply {
-            add(Methods.GET, "/media/{name}", removeMediaPrefixHandler)
-            add(Methods.HEAD, "/media/{name}", removeMediaPrefixHandler)
-            fallbackHandler = ResponseCodeHandler.HANDLE_404
-        })
+        val routingHandler = HttpHandler { exchange ->
+            if (exchange.requestPath.startsWith("/media/")) {
+                if (exchange.requestMethod == Methods.HEAD || exchange.requestMethod == Methods.GET) {
+                    removeMediaPrefixHandler.handleRequest(exchange)
+                } else {
+                    ResponseCodeHandler.HANDLE_405.handleRequest(exchange)
+                }
+            } else {
+                ResponseCodeHandler.HANDLE_404.handleRequest(exchange)
+            }
+        }
+
+        val corsHandler = HttpHandler { exchange ->
+            exchange.responseHeaders.put(HttpString.tryFromString("Access-Control-Allow-Origin"), "*")
+            exchange.responseHeaders.put(HttpString.tryFromString("Access-Control-Allow-Methods"), "GET, HEAD, OPTIONS")
+            exchange.responseHeaders.put(HttpString.tryFromString("Access-Control-Allow-Headers"), "Content-Type")
+
+            if (exchange.requestMethod == Methods.OPTIONS) {
+                exchange.statusCode = 200
+                exchange.endExchange()
+            } else {
+                routingHandler.handleRequest(exchange)
+            }
+        }
 
         server = Undertow.builder()
             .addHttpListener(config.mediaServerPort, config.mediaServerHost)
@@ -78,12 +96,5 @@ class MediaFileServer(
         server?.stop()
         server = null
         logger.info("Media file server stopped")
-    }
-
-    private class CorsHandler(private val next: HttpHandler) : HttpHandler {
-        override fun handleRequest(exchange: HttpServerExchange) {
-            exchange.responseHeaders.put(HttpString.tryFromString("Access-Control-Allow-Origin"), "*")
-            next.handleRequest(exchange)
-        }
     }
 }

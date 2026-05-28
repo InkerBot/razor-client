@@ -42,7 +42,7 @@ object MessageFormatter {
                 "[${media.mediaType.label}]"
         }
         val caption = media.caption?.let { " $it" } ?: ""
-        return "[$tgUsername] $tag ${media.publicUrl}$caption"
+        return "[$tgUsername] $tag\n${media.publicUrl}$caption"
     }
 
     fun escapeHtml(text: String): String {
