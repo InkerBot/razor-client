@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("java-library")
+    id("maven-publish")
     id("bc-i18n")
     kotlin("jvm") version "2.3.10" apply false
 }
@@ -28,6 +29,29 @@ allprojects {
 
     tasks.test {
         useJUnitPlatform()
+    }
+}
+
+listOf(rootProject, project(":transport"), project(":transport:socketio")).forEach { publishedProject ->
+    publishedProject.apply(plugin = "maven-publish")
+
+    publishedProject.extensions.configure<PublishingExtension>("publishing") {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                from(publishedProject.components["java"])
+            }
+        }
+
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY") ?: "InkerBot/razor-client"}")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
+            }
+        }
     }
 }
 
