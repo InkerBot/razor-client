@@ -6,6 +6,10 @@ plugins {
     kotlin("jvm") version "2.3.10" apply false
 }
 
+val releaseVersion = providers.gradleProperty("releaseVersion")
+    .orElse(providers.environmentVariable("RELEASE_VERSION"))
+    .orElse("1.0-SNAPSHOT")
+
 allprojects {
     apply(plugin = "java")
     apply(plugin = "java-library")
@@ -15,7 +19,7 @@ allprojects {
     }
 
     group = "bot.inker.bc"
-    version = "1.0-SNAPSHOT"
+    version = releaseVersion.get()
 
     repositories {
         mavenCentral()
@@ -32,13 +36,14 @@ allprojects {
     }
 }
 
-listOf(rootProject, project(":transport"), project(":transport:socketio")).forEach { publishedProject ->
+rootProject.allprojects.filter { !it.path.startsWith(":application") }.forEach { publishedProject ->
     publishedProject.apply(plugin = "maven-publish")
+    val javaComponent = publishedProject.components["java"]
 
     publishedProject.extensions.configure<PublishingExtension>("publishing") {
         publications {
             create<MavenPublication>("mavenJava") {
-                from(publishedProject.components["java"])
+                from(javaComponent)
             }
         }
 

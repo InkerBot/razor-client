@@ -1,10 +1,18 @@
 name: Build and Publish
 
 on:
+  release:
+    types:
+      - published
   push:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Gradle version override, for example 1.2.4-SNAPSHOT"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -14,9 +22,22 @@ jobs:
   build:
     name: Build application jars
     runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.version.outputs.release_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare i18n sources
+        run: |
+          rm -rf .ci/Bondage-College docs/BondageClub docs/echo-activity-ext docs/echo-clothing-ext
+          mkdir -p .ci docs
+          git clone --depth 1 https://gitgud.io/BondageProjects/Bondage-College.git .ci/Bondage-College
+          ln -s "$PWD/.ci/Bondage-College/BondageClub" docs/BondageClub
+          git clone --depth 1 https://github.com/SugarChain-Studio/echo-activity-ext.git docs/echo-activity-ext
+          git clone --depth 1 https://github.com/SugarChain-Studio/echo-clothing-ext.git docs/echo-clothing-ext
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -27,6 +48,37 @@ jobs:
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
+
+      - name: Resolve release version
+        id: version
+        env:
+          REQUESTED_VERSION: ${{ inputs.version || '' }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || '' }}
+        run: |
+          version="$REQUESTED_VERSION"
+
+          if [[ -z "$version" && -n "$RELEASE_TAG" ]]; then
+            version="$RELEASE_TAG"
+          fi
+
+          if [[ -z "$version" && "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ -z "$version" ]]; then
+            latest_version="$(git tag --list --sort=-v:refname | sed -nE 's/^v?([0-9]+)\.([0-9]+)\.([0-9]+)$/\1.\2.\3/p' | head -n 1)"
+            if [[ -n "$latest_version" ]]; then
+              IFS=. read -r major minor patch <<< "$latest_version"
+              version="${major}.${minor}.$((patch + 1))-SNAPSHOT"
+            else
+              version="1.0-SNAPSHOT"
+            fi
+          fi
+
+          version="${version#v}"
+          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+          echo "release_version=$version" >> "$GITHUB_OUTPUT"
+          echo "Using Gradle version $version"
 
       - name: Build tui and telegram jars
         run: ./gradlew :application:tui:bootJar :application:telegram:bootJar
@@ -57,6 +109,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare i18n sources
+        run: |
+          rm -rf .ci/Bondage-College docs/BondageClub docs/echo-activity-ext docs/echo-clothing-ext
+          mkdir -p .ci docs
+          git clone --depth 1 https://gitgud.io/BondageProjects/Bondage-College.git .ci/Bondage-College
+          ln -s "$PWD/.ci/Bondage-College/BondageClub" docs/BondageClub
+          git clone --depth 1 https://github.com/SugarChain-Studio/echo-activity-ext.git docs/echo-activity-ext
+          git clone --depth 1 https://github.com/SugarChain-Studio/echo-clothing-ext.git docs/echo-clothing-ext
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -70,4 +131,5 @@ jobs:
       - name: Publish non-application modules
         run: ./gradlew publish
         env:
+          RELEASE_VERSION: ${{ needs.build.outputs.release_version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
