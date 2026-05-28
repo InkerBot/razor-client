@@ -18,7 +18,11 @@ allprojects {
         apply(plugin = "kotlin")
     }
 
-    group = "bot.inker.bc"
+    if (project === rootProject) {
+        group = "bot.inker.bc"
+    } else {
+        group = "bot.inker.bc.razor-client"
+    }
     version = releaseVersion.get()
 
     repositories {
