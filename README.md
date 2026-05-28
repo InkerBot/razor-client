@@ -31,6 +31,71 @@ i18n 资源生成插件会在生成资源前更新本地的 Bondage Club 参考�
 | `:application:tui` | 终端 UI 应用。 |
 | `:application:telegram` | Telegram 桥接应用。 |
 
+## 作为依赖使用
+
+库制品发布在 GitHub Packages。若只需要读取依赖，可以使用无需配置凭证的反向代理仓库：
+
+```text
+https://gpr.inker.bot/razor-client/
+```
+
+版本号与 GitHub Release tag 对应，例如 tag `v1.2.3` 对应依赖版本 `1.2.3`。如果需要使用默认 Socket.IO transport，除核心库外还需要加入 `socketio` 运行时依赖。
+
+### Gradle Kotlin DSL
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://gpr.inker.bot/razor-client/")
+}
+
+dependencies {
+    implementation("bot.inker.bc:razor-client:<version>")
+    runtimeOnly("bot.inker.bc:socketio:<version>")
+}
+```
+
+### Gradle Groovy DSL
+
+```groovy
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://gpr.inker.bot/razor-client/")
+    }
+}
+
+dependencies {
+    implementation "bot.inker.bc:razor-client:<version>"
+    runtimeOnly "bot.inker.bc:socketio:<version>"
+}
+```
+
+### Maven
+
+```xml
+<repositories>
+    <repository>
+        <id>razor-client</id>
+        <url>https://gpr.inker.bot/razor-client/</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>bot.inker.bc</groupId>
+        <artifactId>razor-client</artifactId>
+        <version><!-- version --></version>
+    </dependency>
+    <dependency>
+        <groupId>bot.inker.bc</groupId>
+        <artifactId>socketio</artifactId>
+        <version><!-- version --></version>
+        <scope>runtime</scope>
+    </dependency>
+</dependencies>
+```
+
 ## 客户端库用法
 
 使用默认 Socket.IO transport 创建客户端：
